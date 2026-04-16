@@ -30,7 +30,7 @@ public class GunShooter : MonoBehaviour
         {
             RunCheckCast();
 
-            if(Input.GetMouseButtonDown(0))
+            if(Input.GetMouseButtonDown(0) && !pauseMenu.paused)
             {
                 if(ammo > 0)
                 {

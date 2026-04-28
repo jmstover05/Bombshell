@@ -28,7 +28,7 @@ public class GoalTrigger : MonoBehaviour
             return;
         }
 
-        if (!BombshellGameManager.Instance.SelfDestructActive)
+        if (!BombshellGameManager.Instance.sdManager.isSelfDestructing)
         {
             return;
         }

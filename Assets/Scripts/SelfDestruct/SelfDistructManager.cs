@@ -6,13 +6,13 @@ public class SelfDestructManager: MonoBehaviour
     [Tooltip("The number of seconds the self-destruct timer starts with")]
     public float initialTimeLeft = 120.0f;
 
-    private float currentTime = 0.0f;
-    private bool isSelfDestructing = false;
+    public float currentTime = 0.0f;
+    public bool isSelfDestructing = false;
+    public bool isDestroyed = false;
 
     private void Start()
     {
         currentTime = initialTimeLeft;
-        StartSelfDestructTimer();
     }
 
     private void Update()
@@ -68,6 +68,7 @@ public class SelfDestructManager: MonoBehaviour
     {
         HUD.Timer.text = "00:00:00";
         Debug.Log("AHH YOU EXPLODED");
+        isDestroyed = true;
         return;
     }
 

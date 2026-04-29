@@ -26,7 +26,7 @@ public class GunShooter : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (!cooldownOn)
+        if (!cooldownOn && !pauseMenu.paused)
         {
             RunCheckCast();
 

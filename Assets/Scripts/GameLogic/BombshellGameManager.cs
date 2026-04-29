@@ -11,6 +11,7 @@ public class BombshellGameManager : MonoBehaviour
     public Transform finalEscapeCheckpoint;
     public EscapeTrigger escapeTrigger;
     public GoalTrigger goalTrigger;
+    public SelfDestructManager sdManager;
 
     [Header("Rules")]
     public float selfDestructDuration = 30.0f;
@@ -136,6 +137,7 @@ public class BombshellGameManager : MonoBehaviour
             return;
         }
 
+        /* Replaced with established self-destruct code
         if (selfDestructActive)
         {
             timerRemaining -= Time.deltaTime;
@@ -146,6 +148,11 @@ public class BombshellGameManager : MonoBehaviour
                 LoseToTimeout("Time ran out.");
                 return;
             }
+        }
+        */
+        if(sdManager.isDestroyed)
+        {
+            LoseToTimeout("Time ran out.");
         }
 
         if (statusMessageTimer > 0.0f)
@@ -206,9 +213,11 @@ public class BombshellGameManager : MonoBehaviour
             return;
         }
 
-        selfDestructActive = true;
+        sdManager.StartSelfDestructTimer();
+        //selfDestructActive = true;
         checkpointsLocked = true;
-        timerRemaining = selfDestructDuration;
+        //timerRemaining = selfDestructDuration;
+        sdManager.initialTimeLeft = selfDestructDuration;
 
         if (finalEscapeCheckpoint != null)
         {
@@ -218,20 +227,19 @@ public class BombshellGameManager : MonoBehaviour
         RemoveAllEnemies();
         SaveData();
 
-        statusMessage = "SELF DESTRUCTION IN: " + timerRemaining.ToString("F1");
-        statusMessageTimer = 0.0f;
+        //statusMessage = "SELF DESTRUCTION IN: " + timerRemaining.ToString("F1");
+        //statusMessageTimer = 0.0f;
 
         CaptureLevelSnapshot();
     }
 
     public void CompleteLevel()
     {
-        if (!selfDestructActive || levelComplete)
+        if (!sdManager.isSelfDestructing || levelComplete)
         {
             return;
         }
-
-        selfDestructActive = false;
+        sdManager.isSelfDestructing = false;
         levelComplete = true;
         waitingForContinue = false;
         pendingRespawn = false;
@@ -328,7 +336,7 @@ public class BombshellGameManager : MonoBehaviour
             return;
         }
 
-        selfDestructActive = currentSnapshot.selfDestructActive;
+        sdManager.isSelfDestructing = currentSnapshot.selfDestructActive;
         checkpointsLocked = currentSnapshot.checkpointsLocked;
         levelComplete = false;
         waitingForContinue = false;
@@ -337,7 +345,7 @@ public class BombshellGameManager : MonoBehaviour
         endGameMessage = "";
 
         checkpointPosition = currentSnapshot.checkpointPosition;
-        timerRemaining = currentSnapshot.timerRemaining;
+        sdManager.currentTime = currentSnapshot.timerRemaining;
         score = Mathf.Max(0, currentSnapshot.score - scorePenalty);
 
         if (score > highScore)
@@ -395,8 +403,8 @@ public class BombshellGameManager : MonoBehaviour
         currentSnapshot = new LevelSnapshot();
         currentSnapshot.checkpointPosition = checkpointPosition;
         currentSnapshot.score = score;
-        currentSnapshot.timerRemaining = timerRemaining;
-        currentSnapshot.selfDestructActive = selfDestructActive;
+        currentSnapshot.timerRemaining = sdManager.currentTime;
+        currentSnapshot.selfDestructActive = sdManager.isSelfDestructing;
         currentSnapshot.checkpointsLocked = checkpointsLocked;
         currentSnapshot.escapeUsed = escapeTrigger != null && escapeTrigger.Used;
         currentSnapshot.goalUsed = goalTrigger != null && goalTrigger.Used;

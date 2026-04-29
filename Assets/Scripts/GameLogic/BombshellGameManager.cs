@@ -8,11 +8,10 @@ public class BombshellGameManager : MonoBehaviour
 
     [Header("References")]
     public PlayerMovement player;
+    public PlayerHealth playerHealth;
     public Transform finalEscapeCheckpoint;
     public EscapeTrigger escapeTrigger;
     public GoalTrigger goalTrigger;
-    public SelfDestructManager sdManager;
-    public LevelManager levelManager;
 
     [Header("Rules")]
     public float selfDestructDuration = 30.0f;
@@ -62,6 +61,7 @@ public class BombshellGameManager : MonoBehaviour
     {
         public Vector3 checkpointPosition;
         public int score;
+        public int playerHealth;
         public float timerRemaining;
         public bool selfDestructActive;
         public bool checkpointsLocked;
@@ -98,6 +98,11 @@ public class BombshellGameManager : MonoBehaviour
             player = FindAnyObjectByType<PlayerMovement>();
         }
 
+        if (playerHealth == null && player != null)
+        {
+            playerHealth = player.GetComponent<PlayerHealth>();
+        }
+
         if (escapeTrigger == null)
         {
             escapeTrigger = FindAnyObjectByType<EscapeTrigger>();
@@ -113,6 +118,11 @@ public class BombshellGameManager : MonoBehaviour
             checkpointPosition = player.transform.position;
         }
 
+        if (playerHealth != null)
+        {
+            playerHealth.RestoreFullHealth();
+        }
+
         checkpointsLocked = false;
         selfDestructActive = false;
         levelComplete = false;
@@ -120,9 +130,9 @@ public class BombshellGameManager : MonoBehaviour
         pendingRespawn = false;
         endGameMessage = "";
 
-        string key = SceneManager.GetActiveScene().name;
+        string sceneName = SceneManager.GetActiveScene().name;
         score = 0;
-        highScore = PlayerPrefs.GetInt(key + "_HighScore", 0);
+        highScore = BombshellScoreSave.LoadHighScore(sceneName);
 
         SetupGuiStyles();
         statusMessage = "Reach the escape trigger.";
@@ -138,7 +148,6 @@ public class BombshellGameManager : MonoBehaviour
             return;
         }
 
-        /* Replaced with established self-destruct code
         if (selfDestructActive)
         {
             timerRemaining -= Time.deltaTime;
@@ -149,11 +158,6 @@ public class BombshellGameManager : MonoBehaviour
                 LoseToTimeout("Time ran out.");
                 return;
             }
-        }
-        */
-        if(sdManager.isDestroyed)
-        {
-            LoseToTimeout("Time ran out.");
         }
 
         if (statusMessageTimer > 0.0f)
@@ -214,11 +218,9 @@ public class BombshellGameManager : MonoBehaviour
             return;
         }
 
-        sdManager.StartSelfDestructTimer();
-        //selfDestructActive = true;
+        selfDestructActive = true;
         checkpointsLocked = true;
-        //timerRemaining = selfDestructDuration;
-        sdManager.initialTimeLeft = selfDestructDuration;
+        timerRemaining = selfDestructDuration;
 
         if (finalEscapeCheckpoint != null)
         {
@@ -226,30 +228,32 @@ public class BombshellGameManager : MonoBehaviour
         }
 
         RemoveAllEnemies();
+        ClearEnemyProjectiles();
         SaveData();
 
-        //statusMessage = "SELF DESTRUCTION IN: " + timerRemaining.ToString("F1");
-        //statusMessageTimer = 0.0f;
+        statusMessage = "SELF DESTRUCTION IN: " + timerRemaining.ToString("F1");
+        statusMessageTimer = 0.0f;
 
         CaptureLevelSnapshot();
     }
 
     public void CompleteLevel()
     {
-        if (!sdManager.isSelfDestructing || levelComplete)
+        if (!selfDestructActive || levelComplete)
         {
             return;
         }
-        sdManager.isSelfDestructing = false;
+
+        selfDestructActive = false;
         levelComplete = true;
         waitingForContinue = false;
         pendingRespawn = false;
 
         AddScore(goalBonusScore);
 
-        string key = SceneManager.GetActiveScene().name;
-        PlayerPrefs.SetInt(key + "_Wins", PlayerPrefs.GetInt(key + "_Wins", 0) + 1);
-        PlayerPrefs.Save();
+        string sceneName = SceneManager.GetActiveScene().name;
+        BombshellScoreSave.SaveCompletedRun(sceneName, score);
+        highScore = BombshellScoreSave.LoadHighScore(sceneName);
 
         endGameMessage =
             "GOAL REACHED!\n\n" +
@@ -289,8 +293,6 @@ public class BombshellGameManager : MonoBehaviour
             return;
         }
 
-        levelManager.ResetSections(); //disables the sections of the level that were turned on during the previous life
-
         selfDestructActive = false;
         timerRemaining = 0.0f;
 
@@ -324,6 +326,11 @@ public class BombshellGameManager : MonoBehaviour
                 player.TeleportTo(checkpointPosition);
             }
 
+            if (playerHealth != null)
+            {
+                playerHealth.RestoreFullHealth();
+            }
+
             waitingForContinue = false;
             pendingRespawn = false;
             continueMessage = "";
@@ -339,7 +346,7 @@ public class BombshellGameManager : MonoBehaviour
             return;
         }
 
-        sdManager.isSelfDestructing = currentSnapshot.selfDestructActive;
+        selfDestructActive = currentSnapshot.selfDestructActive;
         checkpointsLocked = currentSnapshot.checkpointsLocked;
         levelComplete = false;
         waitingForContinue = false;
@@ -348,13 +355,15 @@ public class BombshellGameManager : MonoBehaviour
         endGameMessage = "";
 
         checkpointPosition = currentSnapshot.checkpointPosition;
-        sdManager.currentTime = currentSnapshot.timerRemaining;
+        timerRemaining = currentSnapshot.timerRemaining;
         score = Mathf.Max(0, currentSnapshot.score - scorePenalty);
 
         if (score > highScore)
         {
             highScore = score;
         }
+
+        ClearEnemyProjectiles();
 
         foreach (EnemySnapshot enemyState in currentSnapshot.enemies)
         {
@@ -377,6 +386,11 @@ public class BombshellGameManager : MonoBehaviour
         if (goalTrigger != null)
         {
             goalTrigger.SetUsed(currentSnapshot.goalUsed);
+        }
+
+        if (playerHealth != null)
+        {
+            playerHealth.SetHealth(currentSnapshot.playerHealth);
         }
 
         if (player != null)
@@ -406,8 +420,9 @@ public class BombshellGameManager : MonoBehaviour
         currentSnapshot = new LevelSnapshot();
         currentSnapshot.checkpointPosition = checkpointPosition;
         currentSnapshot.score = score;
-        currentSnapshot.timerRemaining = sdManager.currentTime;
-        currentSnapshot.selfDestructActive = sdManager.isSelfDestructing;
+        currentSnapshot.playerHealth = playerHealth != null ? playerHealth.CurrentHealth : 0;
+        currentSnapshot.timerRemaining = timerRemaining;
+        currentSnapshot.selfDestructActive = selfDestructActive;
         currentSnapshot.checkpointsLocked = checkpointsLocked;
         currentSnapshot.escapeUsed = escapeTrigger != null && escapeTrigger.Used;
         currentSnapshot.goalUsed = goalTrigger != null && goalTrigger.Used;
@@ -441,12 +456,23 @@ public class BombshellGameManager : MonoBehaviour
         }
     }
 
+    private void ClearEnemyProjectiles()
+    {
+        EnemyProjectile[] projectiles = FindObjectsByType<EnemyProjectile>();
+
+        foreach (EnemyProjectile projectile in projectiles)
+        {
+            if (projectile != null)
+            {
+                Destroy(projectile.gameObject);
+            }
+        }
+    }
+
     private void SaveData()
     {
-        string key = SceneManager.GetActiveScene().name;
-        PlayerPrefs.SetInt(key + "_LastScore", score);
-        PlayerPrefs.SetInt(key + "_HighScore", highScore);
-        PlayerPrefs.Save();
+        string sceneName = SceneManager.GetActiveScene().name;
+        BombshellScoreSave.SaveInProgressHighScore(sceneName, highScore);
     }
 
     private string GetDefaultObjectiveText()
@@ -501,6 +527,14 @@ public class BombshellGameManager : MonoBehaviour
 
         GUI.Label(new Rect(20, 20, 250, 40), "Score: " + score, hudStyle);
         GUI.Label(new Rect(20, 50, 250, 40), "High Score: " + highScore, hudStyle);
+
+        if (playerHealth != null)
+        {
+            GUI.Label(
+                new Rect(20, 80, 250, 40),
+                "Health: " + playerHealth.CurrentHealth + " / " + playerHealth.MaxHealth,
+                hudStyle);
+        }
 
         if (!levelComplete)
         {

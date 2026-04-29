@@ -48,12 +48,46 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 12a01c0a489a29e40bc64aa7402173e0, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 9f16894081315504e855fb1f8a8349ce, type: 2}
     - target: {fileID: 919132149155446097, guid: 12a01c0a489a29e40bc64aa7402173e0, type: 3}
       propertyPath: m_Name
-      value: platform_slope_2x2x2_blue
+      value: prefab_small_ramp
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 12a01c0a489a29e40bc64aa7402173e0, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2050774638577836283}
   m_SourcePrefab: {fileID: 100100000, guid: 12a01c0a489a29e40bc64aa7402173e0, type: 3}
+--- !u!1 &2914860712899804758 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 12a01c0a489a29e40bc64aa7402173e0, type: 3}
+  m_PrefabInstance: {fileID: 2644390946244870919}
+  m_PrefabAsset: {fileID: 0}
+--- !u!64 &2050774638577836283
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2914860712899804758}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 1
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: -406415707458092265, guid: 12a01c0a489a29e40bc64aa7402173e0, type: 3}

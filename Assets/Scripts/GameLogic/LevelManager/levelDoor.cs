@@ -11,6 +11,10 @@ public class levelDoor : MonoBehaviour
     public LevelManager levelManager;
     public Animator animator;
 
+    //determines if the sections should be deactivated
+    public bool deactivateSection1 = true;
+    public bool deactivateSection2 = true;
+
     // the id of the last plate that the player exited from
     private int lastPlateExited = 0;
 
@@ -67,12 +71,12 @@ public class levelDoor : MonoBehaviour
 
     public void DisableSections()
     {
-        if (lastPlateExited == 1)
+        if (lastPlateExited == 1 && deactivateSection2)
         {
             levelManager.DeactivateSection(secondarySectionID);
             isInsidePlate1 = false;
         }
-        else if (lastPlateExited == 2)
+        else if (lastPlateExited == 2 && deactivateSection1)
         {
             levelManager.DeactivateSection(primarySectionID);
             isInsidePlate2 = false;

@@ -10,6 +10,8 @@ public class SelfDestructManager: MonoBehaviour
     public bool isSelfDestructing = false;
     public bool isDestroyed = false;
 
+    public Light light;
+
     private void Start()
     {
         currentTime = initialTimeLeft;
@@ -19,6 +21,7 @@ public class SelfDestructManager: MonoBehaviour
     {
         if (isSelfDestructing)
         {
+            light.color = Color.red;
             if (currentTime > 0.0f)
             {
                 currentTime -= Time.deltaTime;

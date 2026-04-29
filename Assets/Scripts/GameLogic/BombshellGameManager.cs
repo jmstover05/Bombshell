@@ -12,6 +12,7 @@ public class BombshellGameManager : MonoBehaviour
     public EscapeTrigger escapeTrigger;
     public GoalTrigger goalTrigger;
     public SelfDestructManager sdManager;
+    public LevelManager levelManager;
 
     [Header("Rules")]
     public float selfDestructDuration = 30.0f;
@@ -287,6 +288,8 @@ public class BombshellGameManager : MonoBehaviour
         {
             return;
         }
+
+        levelManager.ResetSections(); //disables the sections of the level that were turned on during the previous life
 
         selfDestructActive = false;
         timerRemaining = 0.0f;

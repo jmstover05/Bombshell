@@ -12,6 +12,9 @@ public class BombshellGameManager : MonoBehaviour
     public Transform finalEscapeCheckpoint;
     public EscapeTrigger escapeTrigger;
     public GoalTrigger goalTrigger;
+    public SelfDestructManager sdManager;
+    public LevelManager levelManager;
+
 
     [Header("Rules")]
     public float selfDestructDuration = 30.0f;
@@ -143,11 +146,19 @@ public class BombshellGameManager : MonoBehaviour
 
     void Update()
     {
+        // allows the user to use the pause menu
+        if (pauseMenu.paused)
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+        
         if (levelComplete || waitingForContinue)
         {
             return;
         }
 
+        /* Replaced with code block below
         if (selfDestructActive)
         {
             timerRemaining -= Time.deltaTime;
@@ -159,6 +170,13 @@ public class BombshellGameManager : MonoBehaviour
                 return;
             }
         }
+        */
+
+        if (sdManager.isDestroyed)
+        {
+            LoseToTimeout("Time ran out.");
+        }
+
 
         if (statusMessageTimer > 0.0f)
         {
@@ -172,8 +190,18 @@ public class BombshellGameManager : MonoBehaviour
         }
         else
         {
-            statusMessage = GetDefaultObjectiveText();
+            if(!sdManager.isSelfDestructing)
+            {
+                statusMessage = GetDefaultObjectiveText();
+
+            }
+            else
+            {
+                statusMessage = " ";
+            }
         }
+        
+        
     }
 
     public void AddScore(int amount)
@@ -218,9 +246,12 @@ public class BombshellGameManager : MonoBehaviour
             return;
         }
 
-        selfDestructActive = true;
+        sdManager.StartSelfDestructTimer();
+
+        //selfDestructActive = true;
         checkpointsLocked = true;
-        timerRemaining = selfDestructDuration;
+        //timerRemaining = selfDestructDuration;
+        sdManager.initialTimeLeft = selfDestructDuration;
 
         if (finalEscapeCheckpoint != null)
         {
@@ -231,7 +262,7 @@ public class BombshellGameManager : MonoBehaviour
         ClearEnemyProjectiles();
         SaveData();
 
-        statusMessage = "SELF DESTRUCTION IN: " + timerRemaining.ToString("F1");
+        statusMessage = "";
         statusMessageTimer = 0.0f;
 
         CaptureLevelSnapshot();
@@ -239,12 +270,12 @@ public class BombshellGameManager : MonoBehaviour
 
     public void CompleteLevel()
     {
-        if (!selfDestructActive || levelComplete)
+        if (!sdManager.isSelfDestructing || levelComplete)
         {
             return;
         }
 
-        selfDestructActive = false;
+        sdManager.isSelfDestructing = false;
         levelComplete = true;
         waitingForContinue = false;
         pendingRespawn = false;
@@ -292,6 +323,8 @@ public class BombshellGameManager : MonoBehaviour
         {
             return;
         }
+
+        levelManager.ResetSections(); //disables the sections of the level that were turned on during the previous life
 
         selfDestructActive = false;
         timerRemaining = 0.0f;
@@ -346,7 +379,7 @@ public class BombshellGameManager : MonoBehaviour
             return;
         }
 
-        selfDestructActive = currentSnapshot.selfDestructActive;
+        sdManager.isSelfDestructing = currentSnapshot.selfDestructActive;
         checkpointsLocked = currentSnapshot.checkpointsLocked;
         levelComplete = false;
         waitingForContinue = false;
@@ -355,7 +388,7 @@ public class BombshellGameManager : MonoBehaviour
         endGameMessage = "";
 
         checkpointPosition = currentSnapshot.checkpointPosition;
-        timerRemaining = currentSnapshot.timerRemaining;
+        sdManager.currentTime = currentSnapshot.timerRemaining;
         score = Mathf.Max(0, currentSnapshot.score - scorePenalty);
 
         if (score > highScore)
@@ -421,8 +454,8 @@ public class BombshellGameManager : MonoBehaviour
         currentSnapshot.checkpointPosition = checkpointPosition;
         currentSnapshot.score = score;
         currentSnapshot.playerHealth = playerHealth != null ? playerHealth.CurrentHealth : 0;
-        currentSnapshot.timerRemaining = timerRemaining;
-        currentSnapshot.selfDestructActive = selfDestructActive;
+        currentSnapshot.timerRemaining = sdManager.currentTime;
+        currentSnapshot.selfDestructActive = sdManager.isSelfDestructing;
         currentSnapshot.checkpointsLocked = checkpointsLocked;
         currentSnapshot.escapeUsed = escapeTrigger != null && escapeTrigger.Used;
         currentSnapshot.goalUsed = goalTrigger != null && goalTrigger.Used;
@@ -458,7 +491,7 @@ public class BombshellGameManager : MonoBehaviour
 
     private void ClearEnemyProjectiles()
     {
-        EnemyProjectile[] projectiles = FindObjectsByType<EnemyProjectile>();
+        EnemyProjectile[] projectiles = FindObjectsByType<EnemyProjectile>(FindObjectsSortMode.None);
 
         foreach (EnemyProjectile projectile in projectiles)
         {

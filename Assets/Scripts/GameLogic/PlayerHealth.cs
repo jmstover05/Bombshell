@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class PlayerHealth : MonoBehaviour
 {
+    public FpsHudManager fpsHudManager;
     public int maxHealth = 100;
     public float damageCooldown = 0.35f;
 
@@ -40,6 +41,8 @@ public class PlayerHealth : MonoBehaviour
 
         nextDamageTime = Time.time + damageCooldown;
         currentHealth = Mathf.Max(0, currentHealth - amount);
+        //play hurt screen animation
+        fpsHudManager.hurtScreen.GetComponent<Animator>().Play("hurt");
 
         if (currentHealth == 0 && BombshellGameManager.Instance != null)
         {

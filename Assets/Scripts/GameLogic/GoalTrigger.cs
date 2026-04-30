@@ -3,7 +3,7 @@ using UnityEngine;
 public class GoalTrigger : MonoBehaviour
 {
     [SerializeField] private bool used = false;
-
+    public SelfDestructManager sdManager;
     public bool Used => used;
 
     public void SetUsed(bool value)
@@ -28,7 +28,7 @@ public class GoalTrigger : MonoBehaviour
             return;
         }
 
-        if (!BombshellGameManager.Instance.SelfDestructActive)
+        if (!sdManager.isSelfDestructing)
         {
             return;
         }

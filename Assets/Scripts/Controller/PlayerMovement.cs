@@ -3,6 +3,8 @@ using UnityEngine;
 [RequireComponent(typeof(CharacterController))]
 public class PlayerMovement : MonoBehaviour
 {
+    public cameraLook cam;
+    public GunShooter gun;
     [Header("Camera / Movement Direction")]
     public Transform movementReference;
 
@@ -25,6 +27,7 @@ public class PlayerMovement : MonoBehaviour
 
     private float coyoteTimer = 0.0f;
     private float jumpBufferTimer = 0.0f;
+    private int gunJumpCounter = 0;
 
     void Start()
     {
@@ -43,6 +46,7 @@ public class PlayerMovement : MonoBehaviour
             {
                 verticalVelocity.y = -2.0f;
             }
+            gunJumpCounter = 0;
         }
         else
         {
@@ -95,6 +99,8 @@ public class PlayerMovement : MonoBehaviour
         {
             verticalVelocity.y = Mathf.Sqrt(jumpHeight * -2.0f * gravity);
 
+            gunJumpCounter = 1;
+
             jumpBufferTimer = 0.0f;
             coyoteTimer = 0.0f;
         }
@@ -113,6 +119,12 @@ public class PlayerMovement : MonoBehaviour
             Vector3.zero,
             impulseDrag * Time.deltaTime
         );
+
+        //do gun jump
+        if (Input.GetMouseButtonDown(0))
+        {
+            GunJump();
+        }
     }
 
     public void ForceJump(float customJumpHeight = -1.0f)
@@ -121,6 +133,19 @@ public class PlayerMovement : MonoBehaviour
         verticalVelocity.y = Mathf.Sqrt(heightToUse * -2.0f * gravity);
     }
 
+    public void GunJump()
+    {
+        if(!controller.isGrounded 
+            && gunJumpCounter > 0 
+            && (cam.vertAngle <= cam.lowerAngleLimit && cam.vertAngle > cam.lowerAngleLimit -5.0f) 
+            && gun.ammo > 0)
+        {
+            ForceJump(2.0f);
+            gunJumpCounter = 0;
+        }
+    }
+
+    /*
     public void ApplyGunJump(Vector3 impulseDirection, float impulsePower, float minimumUpVelocity)
     {
         if (impulseDirection.sqrMagnitude <= 0.001f)
@@ -136,7 +161,7 @@ public class PlayerMovement : MonoBehaviour
         float upwardVelocity = Mathf.Max(impulse.y, minimumUpVelocity);
         verticalVelocity.y = Mathf.Max(verticalVelocity.y, upwardVelocity);
     }
-
+    */
     public void TeleportTo(Vector3 worldPosition)
     {
         controller.enabled = false;

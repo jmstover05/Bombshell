@@ -54,19 +54,17 @@ public class EnemyProjectile : MonoBehaviour
 
         foreach (RaycastHit hit in hits)
         {
-            if (owner != null)
-            {
-                if (hit.transform == owner || hit.transform.IsChildOf(owner))
-                {
-                    continue;
-                }
-            }
 
             PlayerHealth playerHealth = hit.collider.GetComponent<PlayerHealth>();
 
             if (playerHealth == null)
             {
                 playerHealth = hit.collider.GetComponentInParent<PlayerHealth>();
+                if(playerHealth == null && hit.collider.GetComponent<BombshellEnemy>() == null && hit.collider != gameObject.GetComponent<SphereCollider>())
+                {
+                    Destroy(gameObject);
+                    
+                }
             }
 
             if (playerHealth != null)
@@ -76,6 +74,8 @@ public class EnemyProjectile : MonoBehaviour
                 Destroy(gameObject);
                 return true;
             }
+            
+            
         }
 
         return false;

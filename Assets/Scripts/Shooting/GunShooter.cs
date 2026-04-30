@@ -39,7 +39,7 @@ public class GunShooter : MonoBehaviour
 
     private float cooldownTimer = 0.0f;
     private bool cooldownOn = false;
-    private int ammo = 0;
+    public int ammo = 0;
 
     private PlayerMovement playerMovement;
 
@@ -73,7 +73,7 @@ public class GunShooter : MonoBehaviour
         {
             RunCheckCast();
 
-            if (Input.GetMouseButtonDown(0))
+            if (Input.GetMouseButtonDown(0) && !pauseMenu.paused)
             {
                 if (ammo > 0)
                 {
@@ -248,11 +248,13 @@ public class GunShooter : MonoBehaviour
 
         Vector3 impulseDirection = -aimRay.direction;
 
+        /*
         playerMovement.ApplyGunJump(
             impulseDirection,
             gunJumpImpulsePower,
             gunJumpMinUpVelocity
         );
+        */
 
         Debug.Log("Angled gun jump triggered from surface: " + hit.collider.name);
         return true;
@@ -294,7 +296,7 @@ public class GunShooter : MonoBehaviour
         BombshellEnemy bestEnemy = null;
         float bestDepth = float.MaxValue;
 
-        BombshellEnemy[] enemies = FindObjectsByType<BombshellEnemy>();
+        BombshellEnemy[] enemies = FindObjectsByType<BombshellEnemy>(FindObjectsSortMode.None);
 
         foreach (BombshellEnemy enemy in enemies)
         {

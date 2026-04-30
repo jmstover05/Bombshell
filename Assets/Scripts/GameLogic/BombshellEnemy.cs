@@ -4,6 +4,8 @@ using UnityEngine;
 public class BombshellEnemy : MonoBehaviour
 {
     public static readonly List<BombshellEnemy> Registry = new List<BombshellEnemy>();
+    public GameObject explosionEffect = null;
+    public Animator anim;
 
     [Header("Health")]
     public float maxHealth = 3.0f;
@@ -225,6 +227,7 @@ public class BombshellEnemy : MonoBehaviour
 
         nextShootTime = Time.time + shootCooldown;
         ShootAtPlayer(player);
+        anim.Play("Fire");
     }
 
     private void ShootAtPlayer(Transform player)
@@ -336,6 +339,7 @@ public class BombshellEnemy : MonoBehaviour
         }
 
         currentHealth -= amount;
+        anim.Play("hurt");
 
         Debug.Log(name + " took " + amount + " damage. HP: " + currentHealth + " / " + maxHealth);
 
@@ -354,6 +358,11 @@ public class BombshellEnemy : MonoBehaviour
 
         dead = true;
         currentHealth = 0.0f;
+        //spawns explosion effect upon death
+        if (explosionEffect != null)
+        {
+            Instantiate(explosionEffect, transform.position, Quaternion.identity);
+        }
 
         if (BombshellGameManager.Instance != null)
         {

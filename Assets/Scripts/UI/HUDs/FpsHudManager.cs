@@ -12,5 +12,6 @@ public class FpsHudManager : MonoBehaviour
     public Image gun;
     [Tooltip("The ammo counter HUD element")]
     public TextMeshProUGUI ammoCounter;
+    public GameObject hurtScreen;
 
 }

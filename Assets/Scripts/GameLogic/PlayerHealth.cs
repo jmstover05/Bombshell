@@ -14,6 +14,7 @@ public class PlayerHealth : MonoBehaviour
 
     void Awake()
     {
+        maxHealth = PlayerPrefs.GetInt("healthPoints");
         currentHealth = maxHealth;
     }
 

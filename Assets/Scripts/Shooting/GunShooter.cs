@@ -45,6 +45,7 @@ public class GunShooter : MonoBehaviour
 
     void Start()
     {
+        maxAmmo = PlayerPrefs.GetInt("ammo");
         ammo = maxAmmo;
 
         playerMovement = GetComponentInParent<PlayerMovement>();

@@ -588,12 +588,27 @@ public class BombshellGameManager : MonoBehaviour
                 endStyle
             );
 
+            GUI.Label(
+                new Rect(Screen.width / 2 - 250, Screen.height / 2 - 280, 500, 120),
+                "Give Up",
+                endStyle
+            );
+
             if (GUI.Button(
                 new Rect(Screen.width / 2 - 100, Screen.height / 2 + 10, 200, 60),
                 "Continue",
                 buttonStyle))
             {
                 ContinueAfterDeathScreen();
+            }
+
+            if (GUI.Button(
+                new Rect(Screen.width / 2 - 100, Screen.height / 2 + 90, 200, 60),
+                "Give Up",
+                buttonStyle))
+            {
+                SceneManager.UnloadSceneAsync("Scenes/GameLevel");
+                SceneManager.LoadScene("Scenes/Lose", LoadSceneMode.Single);
             }
         }
 
@@ -606,6 +621,15 @@ public class BombshellGameManager : MonoBehaviour
                 endGameMessage,
                 endStyle
             );
+
+            if (GUI.Button(new Rect(Screen.width / 2 - 100, Screen.height / 2 + 10, 200, 60), "GOAL REACHED!\n\n" +
+            "YOU ESCAPED!\n\n" +
+            "FINAL SCORE: " + score + "\n" +
+            "HIGH SCORE: " + highScore,
+            buttonStyle)) {
+                SceneManager.UnloadSceneAsync("Scenes/GameLevel");
+                SceneManager.LoadScene("Scenes/Win", LoadSceneMode.Single);
+            }
         }
     }
 }
